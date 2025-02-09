@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconhecimento Facial</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Reconhecimento Facial</h1>
+
+    <h3>📤 Enviar Imagem para o Banco</h3>
+    <input type="file" id="uploadFile">
+    <button onclick="uploadImage()">Enviar</button>
+
+    <h3>🔎 Buscar Imagem no Banco</h3>
+    <input type="file" id="searchFile">
+    <button onclick="searchImage()">Buscar</button>
+
+    <h3>Resultados:</h3>
+    <div id="results"></div>
+
+    <script>
+        const API_URL = "https://reconhecimento-facial-backend.onrender.com";
+
+        async function uploadImage() {
+            let fileInput = document.getElementById("uploadFile").files[0];
+            let formData = new FormData();
+            formData.append("file", fileInput);
+
+            let response = await fetch(`${API_URL}/upload/`, {
+                method: "POST",
+                body: formData
+            });
+
+            let result = await response.json();
+            alert(result.message);
+        }
+
+        async function searchImage() {
+            let fileInput = document.getElementById("searchFile").files[0];
+            let formData = new FormData();
+            formData.append("file", fileInput);
+
+            let response = await fetch(`${API_URL}/search/`, {
+                method: "POST",
+                body: formData
+            });
+
+            let result = await response.json();
+            let resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "";
+
+            if (result.matches.length > 0) {
+                result.matches.forEach(match => {
+                    let imgElement = document.createElement("img");
+                    imgElement.src = `${API_URL}/static/${match.image}`;
+                    imgElement.style.width = "150px";
+                    resultsDiv.appendChild(imgElement);
+                });
+            } else {
+                resultsDiv.innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
+            }
+        }
+    </script>
+</body>
+</html>
