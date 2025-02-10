@@ -35,19 +35,40 @@
             background-color: #0056b3;
         }
 
-        #results {
+        #results, #allImages {
             margin-top: 20px;
+        }
+
+        .image-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
         }
 
         img {
             border-radius: 8px;
-            margin: 10px;
+            width: 150px;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-link {
+            display: block;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .download-link:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <h1>🔍 Reconhecimento Facial</h1>
+
+    <h3>📸 Imagens no Banco de Dados:</h3>
+    <div id="allImages">Carregando...</div>
 
     <h3>📤 Enviar Imagem para o Banco</h3>
     <input type="file" id="uploadFile">
@@ -57,11 +78,47 @@
     <input type="file" id="searchFile">
     <button onclick="searchImage()">Buscar</button>
 
-    <h3>Resultados:</h3>
+    <h3>🔎 Resultados da Busca:</h3>
     <div id="results"></div>
 
     <script>
         const API_URL = "https://reconhecimento-facial-backend.onrender.com";
+
+        // Carrega todas as imagens ao iniciar
+        async function loadAllImages() {
+            try {
+                let response = await fetch(`${API_URL}/get_all_images`);
+                let result = await response.json();
+                let allImagesDiv = document.getElementById("allImages");
+                allImagesDiv.innerHTML = "";
+
+                if (result.images.length > 0) {
+                    result.images.forEach(image => {
+                        let imgContainer = document.createElement("div");
+                        imgContainer.className = "image-container";
+
+                        let imgElement = document.createElement("img");
+                        imgElement.src = `${API_URL}/static/${image}`;
+                        imgElement.alt = image;
+
+                        let downloadLink = document.createElement("a");
+                        downloadLink.href = `${API_URL}/static/${image}`;
+                        downloadLink.download = image;
+                        downloadLink.className = "download-link";
+                        downloadLink.innerText = "📥 Baixar";
+
+                        imgContainer.appendChild(imgElement);
+                        imgContainer.appendChild(downloadLink);
+                        allImagesDiv.appendChild(imgContainer);
+                    });
+                } else {
+                    allImagesDiv.innerHTML = "<p>Nenhuma imagem no banco.</p>";
+                }
+            } catch (error) {
+                console.error("Erro ao carregar imagens:", error);
+                document.getElementById("allImages").innerHTML = "<p>Erro ao carregar imagens.</p>";
+            }
+        }
 
         async function uploadImage() {
             let fileInput = document.getElementById("uploadFile").files[0];
@@ -80,6 +137,7 @@
 
                 let result = await response.json();
                 alert("✅ " + result.message);
+                loadAllImages(); // Atualiza a lista de imagens
             } catch (error) {
                 console.error("Erro ao enviar imagem:", error);
                 alert("❌ Erro ao enviar imagem. Tente novamente.");
@@ -103,23 +161,38 @@
 
                 let result = await response.json();
                 let resultsDiv = document.getElementById("results");
-                resultsDiv.innerHTML = "<h3>🔎 Resultados:</h3>";
+                resultsDiv.innerHTML = "";
 
                 if (result.matches.length > 0) {
                     result.matches.forEach(match => {
+                        let imgContainer = document.createElement("div");
+                        imgContainer.className = "image-container";
+
                         let imgElement = document.createElement("img");
                         imgElement.src = `${API_URL}/static/${match.image}`;
-                        imgElement.style.width = "150px";
-                        resultsDiv.appendChild(imgElement);
+                        imgElement.alt = match.image;
+
+                        let downloadLink = document.createElement("a");
+                        downloadLink.href = `${API_URL}/static/${match.image}`;
+                        downloadLink.download = match.image;
+                        downloadLink.className = "download-link";
+                        downloadLink.innerText = "📥 Baixar";
+
+                        imgContainer.appendChild(imgElement);
+                        imgContainer.appendChild(downloadLink);
+                        resultsDiv.appendChild(imgContainer);
                     });
                 } else {
-                    resultsDiv.innerHTML += "<p>❌ Nenhuma correspondência encontrada.</p>";
+                    resultsDiv.innerHTML = "<p>❌ Nenhuma correspondência encontrada.</p>";
                 }
             } catch (error) {
                 console.error("Erro ao buscar imagem:", error);
                 alert("❌ Erro ao buscar imagem. Tente novamente.");
             }
         }
+
+        // Carregar todas as imagens ao abrir a página
+        window.onload = loadAllImages;
     </script>
 </body>
 </html>
