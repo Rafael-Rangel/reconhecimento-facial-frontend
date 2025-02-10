@@ -5,7 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reconhecimento Facial</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            color: #343a40;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 10px auto;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        img {
+            border-radius: 8px;
+            margin: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -27,41 +65,59 @@
 
         async function uploadImage() {
             let fileInput = document.getElementById("uploadFile").files[0];
+            if (!fileInput) {
+                alert("⚠️ Selecione uma imagem antes de enviar.");
+                return;
+            }
             let formData = new FormData();
             formData.append("file", fileInput);
 
-            let response = await fetch(`${API_URL}/upload/`, {
-                method: "POST",
-                body: formData
-            });
+            try {
+                let response = await fetch(`${API_URL}/upload/`, {
+                    method: "POST",
+                    body: formData
+                });
 
-            let result = await response.json();
-            alert(result.message);
+                let result = await response.json();
+                alert("✅ " + result.message);
+            } catch (error) {
+                console.error("Erro ao enviar imagem:", error);
+                alert("❌ Erro ao enviar imagem. Tente novamente.");
+            }
         }
 
         async function searchImage() {
             let fileInput = document.getElementById("searchFile").files[0];
+            if (!fileInput) {
+                alert("⚠️ Selecione uma imagem para buscar.");
+                return;
+            }
             let formData = new FormData();
             formData.append("file", fileInput);
 
-            let response = await fetch(`${API_URL}/search/`, {
-                method: "POST",
-                body: formData
-            });
-
-            let result = await response.json();
-            let resultsDiv = document.getElementById("results");
-            resultsDiv.innerHTML = "";
-
-            if (result.matches.length > 0) {
-                result.matches.forEach(match => {
-                    let imgElement = document.createElement("img");
-                    imgElement.src = `${API_URL}/static/${match.image}`;
-                    imgElement.style.width = "150px";
-                    resultsDiv.appendChild(imgElement);
+            try {
+                let response = await fetch(`${API_URL}/search/`, {
+                    method: "POST",
+                    body: formData
                 });
-            } else {
-                resultsDiv.innerHTML = "<p>Nenhuma correspondência encontrada.</p>";
+
+                let result = await response.json();
+                let resultsDiv = document.getElementById("results");
+                resultsDiv.innerHTML = "<h3>🔎 Resultados:</h3>";
+
+                if (result.matches.length > 0) {
+                    result.matches.forEach(match => {
+                        let imgElement = document.createElement("img");
+                        imgElement.src = `${API_URL}/static/${match.image}`;
+                        imgElement.style.width = "150px";
+                        resultsDiv.appendChild(imgElement);
+                    });
+                } else {
+                    resultsDiv.innerHTML += "<p>❌ Nenhuma correspondência encontrada.</p>";
+                }
+            } catch (error) {
+                console.error("Erro ao buscar imagem:", error);
+                alert("❌ Erro ao buscar imagem. Tente novamente.");
             }
         }
     </script>
